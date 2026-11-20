@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+_build/
+*.zip
+*.tmp
+crash.log
+
+# свои персонажи, события и настройки — у каждого свои
+data/
+
+# личное: рисовка своих персонажей и их иконка
+my_characters.py
+icons/cascada.*
+АНИМАЦИИ.md
