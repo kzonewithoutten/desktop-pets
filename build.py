@@ -43,7 +43,7 @@ Python и что-то ещё ставить не нужно.
 SPEC = r'''
 # -*- mode: python ; coding: utf-8 -*-
 base = {base!r}
-common = dict(pathex=[base], hiddenimports=[], excludes=["numpy", "PIL", "matplotlib", "test", "unittest"])
+common = dict(pathex=[base], hiddenimports=[], excludes=["numpy", "PIL", "matplotlib", "test", "unittest"] + {extra!r})
 a1 = Analysis([base + r"\main.py"], **common)
 a2 = Analysis([base + r"\editor.py"], **common)
 pyz1 = PYZ(a1.pure)
@@ -76,11 +76,11 @@ def ensure_pyinstaller():
                    check=True)
 
 
-def build_exe():
+def build_exe(extra_excludes):
     os.makedirs(WORK, exist_ok=True)
     spec = os.path.join(WORK, "pets.spec")
     with open(spec, "w", encoding="utf-8") as f:
-        f.write(SPEC.format(base=BASE, pets_icon=os.path.join(BASE, "icons", "pets.ico"),
+        f.write(SPEC.format(base=BASE, extra=extra_excludes, pets_icon=os.path.join(BASE, "icons", "pets.ico"),
                             editor_icon=os.path.join(BASE, "icons", "editor.ico")))
     log("Собираю программы (PyInstaller)…")
     p = subprocess.run([sys.executable, "-m", "PyInstaller", "--noconfirm", "--log-level", "WARN",
@@ -128,7 +128,13 @@ def main():
     started = time.time()
 
     ensure_pyinstaller()
-    app = build_exe()
+    try:
+        import my_characters
+        own = set(my_characters.NAMES)
+    except ImportError:
+        own = set()
+    needed = any(store.load_char(c).get("drawing") in own for c in chars)
+    app = build_exe([] if needed else ["my_characters"])
 
     stage = os.path.join(WORK, "package", args.name)
     shutil.rmtree(os.path.join(WORK, "package"), ignore_errors=True)
